@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scroll Infinito</title>
+  <style>
+    #gallery {
+      column-count: 4;
+      column-gap: 10px;
+      margin: 10px;
+    }
+    .photo {
+      display: inline-block;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .loader {
+      text-align: center;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="gallery"></div>
+  <div id="loader" class="loader">
+    <img src="loader.gif" alt="Loader">
+  </div>
+
+  <script>
+    var page = 1;
+    var isLoading = false;
+
+    function loadPhotos() {
+      if (isLoading) return;
+
+      isLoading = true;
+      var loader = document.getElementById("loader");
+      loader.style.display = "block";
+
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "load_photos.php", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var response = JSON.parse(xhr.responseText);
+          if (response.length > 0) {
+            var gallery = document.getElementById("gallery");
+
+            response.forEach(function(photo) {
+              var photoHTML = '<div class="photo"><img src="' + photo.url + '" alt="' + photo.title + '"></div>';
+              gallery.innerHTML += photoHTML;
+            });
+
+            page++;
+          } else {
+            window.removeEventListener("scroll", scrollHandler);
+          }
+        }
+        loader.style.display = "none";
+        isLoading = false;
+      };
+      xhr.send("page=" + page);
+    }
+
+    function scrollHandler() {
+      if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+        loadPhotos();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      loadPhotos();
+      window.addEventListener("scroll", scrollHandler);
+    });
+  </script>
+</body>
+</html>
